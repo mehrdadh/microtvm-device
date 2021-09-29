@@ -1,0 +1,25 @@
+[tool.poetry]
+name = "microtvm_device"
+version = "0.1.3"
+description = ""
+authors = ["mehrdadh <mehrdad.hessar@gmail.com>"]
+keywords = ["microTVM", "tvm", "device"]
+readme = "README.md"
+repository = "https://github.com/mehrdadh/microtvm-device"
+license = "Apache"
+packages = [
+   { include="microtvm_device", from="." },
+]
+
+[tool.poetry.dependencies]
+python = "^3.6.9"
+grpcio = "^1.39.0"
+grpcio-tools = "^1.39.0"
+tabulate = "^0.8.9"
+pytest = "^6.2.4"
+
+[tool.poetry.dev-dependencies]
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
