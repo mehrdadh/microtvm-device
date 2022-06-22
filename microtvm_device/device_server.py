@@ -40,6 +40,11 @@ def LoadAttachedDevices(args: argparse.Namespace) -> MicroTVMPlatforms:
     return: attached_devices
     """
     table = device_utils.LoadDeviceTable(args.table_file)
+    
+    # Return a fake list of devices for testing
+    if args.dry_run:
+        return table
+
     all_device_types = table.GetAllDeviceTypes()
     attached_devices = MicroTVMPlatforms()
 
@@ -168,6 +173,8 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--port", type=int, default=50051, help="RPC port number.")
     parser.add_argument("--log-level", default=None, help="Log level.")
+    parser.add_argument("--dry-run", default=False, action="store_true")
+
     return parser.parse_args()
 
 
