@@ -186,6 +186,11 @@ def request_device(args: argparse.Namespace):
             while not micro_device.GetSerialNumber():
                 micro_device = server_request_device(args)
                 time.sleep(5)
+    response_serial_number = micro_device.GetSerialNumber()
+    if response_serial_number:
+        LOG_.info(f"Request response was device with S/N {response_serial_number}!")
+    else:
+        LOG_.info(f"No device available.")
     return micro_device.GetSerialNumber()
 
 
@@ -225,6 +230,7 @@ def parse_args() -> argparse.Namespace:
         default=50051,
         help="RPC server port",
     )
+    parser.add_argument("--log-level", default=None, help="Log level.")
 
     parser_attach = subparsers.add_parser(
         "attach", help="Request a device and attach a virtual machine."
@@ -251,6 +257,7 @@ def parse_args() -> argparse.Namespace:
         "request", help="Request a device from device server."
     )
     parser_request.set_defaults(func=request_device)
+    parser_request.add_argument(device_arg[0], **device_arg[1])
     parser_request.add_argument(
         "--wait", action="store_true", help="Wait if device not available."
     )
@@ -279,9 +286,11 @@ def parse_args() -> argparse.Namespace:
 
 def main():
     args = parse_args()
-    logging.basicConfig(level=logging.INFO)
+    if args.log_level:
+        logging.basicConfig(level=args.log_level)
+    else:
+        logging.basicConfig(level=logging.INFO)
     run_command(args)
-
 
 if __name__ == "__main__":
     main()

@@ -24,6 +24,7 @@ import json
 from tabulate import tabulate
 import logging
 import copy
+import random
 
 VIRTUALBOX_VID_PID_RE = re.compile(r"0x([0-9A-Fa-f]{4}).*")
 
@@ -168,13 +169,19 @@ class MicroTVMPlatforms:
 
     def GetPlatform(self, type: str, session_number: str, username: str) -> str:
         """Gets a MicroDevice from platform list."""
+        candidate_platforms = []
         for platform in self._platforms:
             if platform._type == type and not platform._is_taken and platform._enabled:
-                platform._is_taken = True
-                platform._user = username
-                serial_number = platform.GetSerialNumber()
-                self._sessions[session_number].append(serial_number)
-                return copy.copy(platform)
+                candidate_platforms.append(platform)
+
+        if len(candidate_platforms) > 0:
+            random_num = random.randint(0, len(candidate_platforms)-1)
+            platform = candidate_platforms[random_num]
+            platform._is_taken = True
+            platform._user = username
+            serial_number = platform.GetSerialNumber()
+            self._sessions[session_number].append(serial_number)
+            return copy.copy(platform)
         return None
 
     def ReleasePlatform(self, serial_number: str):

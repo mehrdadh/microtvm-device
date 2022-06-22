@@ -1,0 +1,87 @@
+{
+    "nucleo_f746zg": {
+        "vid_hex": "0483",
+        "pid_hex": "374b",
+        "manufacturer": "STMicroelectronics",
+        "instances": [
+            "nucleo_f746zg_1",
+            "nucleo_f746zg_2",
+            "nucleo_f746zg_3"
+        ]
+        },
+    "stm32f746g_disco": {
+        "vid_hex": "0483",
+        "pid_hex": "374b",
+        "manufacturer": "STMicroelectronics",
+        "instances": [
+            "stm32f746g_disco_1",
+            "stm32f746g_disco_2",
+            "stm32f746g_disco_3"
+        ]
+    },
+    "nrf5340dk_nrf5340_cpuapp": {
+        "vid_hex": "1366",
+        "pid_hex": "1055",
+        "manufacturer": "SEGGER",
+        "instances": [
+            "nrf5340dk_nrf5340_cpuapp_1",
+            "nrf5340dk_nrf5340_cpuapp_2",
+            "nrf5340dk_nrf5340_cpuapp_3",
+            "nrf5340dk_nrf5340_cpuapp_4",
+            "nrf5340dk_nrf5340_cpuapp_5",
+            "nrf5340dk_nrf5340_cpuapp_6",
+            "nrf5340dk_nrf5340_cpuapp_7",
+            "nrf5340dk_nrf5340_cpuapp_8",
+            "nrf5340dk_nrf5340_cpuapp_9",
+            "nrf5340dk_nrf5340_cpuapp_10",
+            "nrf5340dk_nrf5340_cpuapp_11",
+            "nrf5340dk_nrf5340_cpuapp_12",
+            "nrf5340dk_nrf5340_cpuapp_13",
+            "nrf5340dk_nrf5340_cpuapp_14",
+            "nrf5340dk_nrf5340_cpuapp_15",
+            "nrf5340dk_nrf5340_cpuapp_16",
+            "nrf5340dk_nrf5340_cpuapp_17",
+            "nrf5340dk_nrf5340_cpuapp_18"
+        ]
+    },
+    "nucleo_l4r5zi": {
+        "vid_hex": "0483",
+        "pid_hex": "374b",
+        "manufacturer": "STMicroelectronics",
+        "instances": [
+            "nucleo_l4r5zi_1",
+            "nucleo_l4r5zi_2",
+            "nucleo_l4r5zi_3"
+        ]
+    },
+    "nano33ble": {
+        "vid_hex": "2341",
+        "pid_hex": "805a",
+        "manufacturer": "NA",
+        "instances": [
+            "nano33ble_1",
+            "nano33ble_2",
+            "nano33ble_3"
+        ]
+    },
+    "due": {
+        "vid_hex": "2341",
+        "pid_hex": "003d",
+        "manufacturer": "NA",
+        "instances": [
+            "due_1",
+            "due_2",
+            "due_3"
+        ]
+    },
+    "spresense": {
+        "vid_hex": "10c4",
+        "pid_hex": "ea60",
+        "manufacturer": "NA",
+        "instances": [
+            "spresense_1",
+            "spresense_2",
+            "spresense_3"
+        ]
+    }
+}
