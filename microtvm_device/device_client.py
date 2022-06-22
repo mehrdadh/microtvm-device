@@ -187,7 +187,10 @@ def request_device(args: argparse.Namespace):
                 micro_device = server_request_device(args)
                 time.sleep(5)
     response_serial_number = micro_device.GetSerialNumber()
-    LOG_.info(f"Request response was device with S/N {response_serial_number}!")
+    if response_serial_number:
+        LOG_.info(f"Request response was device with S/N {response_serial_number}!")
+    else:
+        LOG_.info(f"No device available.")
     return micro_device.GetSerialNumber()
 
 
