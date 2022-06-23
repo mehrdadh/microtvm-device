@@ -216,6 +216,13 @@ class MicroTVMPlatforms:
                 return copy.copy(platform)
         return None
 
+def _check_call(cmd, **kwargs) -> None:
+    try:
+        subprocess.run(cmd, capture_output=True, check=True, text=True, **kwargs)
+    except Exception as err:
+        error_msg = f"{err}\nstdout:\n{err.stdout}\nstderr:\n{err.stderr}"
+        raise Exception(error_msg)
+
 def LoadDeviceTable(table_file: str) -> MicroTVMPlatforms:
     """Load device table Json file to MicroTVMPlatforms."""
     with open(table_file, "r") as json_f:
@@ -421,8 +428,7 @@ def attach(micro_device: MicroDevice, vm_path: str):
         # if virtualbox_is_live(machine_uuid):
         #     raise RuntimeError("VM is running.")
 
-        # subprocess.check_call(rule_args)
-        subprocess.check_call(
+        _check_call(
             ["VBoxManage", "controlvm", machine_uuid, "usbattach", dev_uuid]
         )
         LOG_.info(f"USB with S/N {serial} attached.")
@@ -451,7 +457,7 @@ def detach(micro_device: MicroDevice, vm_path: str):
         LOG_.warning(f"Serial {micro_device.GetSerialNumber()} not found in usb devies.")
         LOG_.warning(usb_devices)
         return
-    subprocess.check_call(
+    _check_call(
         ["VBoxManage", "controlvm", machine_uuid, "usbdetach", dev_uuid]
     )
 
