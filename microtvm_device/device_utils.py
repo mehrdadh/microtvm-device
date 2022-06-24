@@ -26,6 +26,7 @@ import logging
 import copy
 import random
 import grp
+import getpass
 
 VIRTUALBOX_VID_PID_RE = re.compile(r"0x([0-9A-Fa-f]{4}).*")
 
@@ -245,9 +246,14 @@ def GetUsersFromGroup(group_name: str) -> list:
                 all_users.append(user)
     return all_users
 
-def ParseVirtualBoxDevices(micro_device: MicroDevice) -> list:
-    """Parse usb devices and return a list of devices maching microtvm_platform."""
-    vboxusers = GetUsersFromGroup("vboxusers")
+def ParseVirtualBoxDevices(micro_device: MicroDevice, username: str=None) -> list:
+    """Parse usb devices and return a list of devices maching microtvm_platform.
+    This function returns one device per serial number and user.
+    """
+    if username:
+        vboxusers = [username]
+    else:
+        vboxusers = GetUsersFromGroup("vboxusers")
     devices = []
     for user in vboxusers:
         output = subprocess.check_output(
@@ -299,7 +305,7 @@ def ParseVirtualBoxDevices(micro_device: MicroDevice) -> list:
                         ):
                             devices.append(current_dev)
                     current_dev = {}
-
+                # Line empty and a device is not created
                 continue
 
             key, value = line.split(":", 1)
@@ -323,7 +329,29 @@ def ListConnectedDevices(micro_device: MicroDevice) -> list:
             new_device.SetUser()
         device_list.append(new_device)
 
-    return device_list
+    # Remove repetition in devices
+    refined_list = []
+    serial_list = []
+    for device_1 in device_list:
+        if device_1.GetSerialNumber() in serial_list:
+            continue
+        temp_devices = [device_1]
+        serial_list.append(device_1.GetSerialNumber())
+
+        for device_2 in device_list:
+            if device_1.GetSerialNumber() == device_2.GetSerialNumber():
+                temp_devices.append(device_2)
+
+        device_added = False
+        for device in temp_devices:
+            if device._is_taken:
+                refined_list.append(device)
+                device_added = True
+                continue
+        if not device_added:
+            refined_list.append(device)
+
+    return refined_list
 
 
 def DeviceIsAlive(device_type: str, serial: str) -> bool:
@@ -378,7 +406,7 @@ def attach(micro_device: MicroDevice, vm_path: str):
     """
     Attach a microTVM platform to a virtualbox.
     """
-    usb_devices = ParseVirtualBoxDevices(micro_device)
+    usb_devices = ParseVirtualBoxDevices(micro_device, username=getpass.getuser())
     found = False
     for dev in usb_devices:
         if dev["SerialNumber"] == micro_device.GetSerialNumber():
@@ -445,7 +473,7 @@ def detach(micro_device: MicroDevice, vm_path: str):
     ) as f:
         machine_uuid = f.read()
 
-    usb_devices = ParseVirtualBoxDevices(micro_device)
+    usb_devices = ParseVirtualBoxDevices(micro_device, username=getpass.getuser())
     found = False
     for dev in usb_devices:
         if dev["SerialNumber"] == micro_device.GetSerialNumber():

@@ -160,6 +160,9 @@ def attach_device(args: argparse.Namespace):
 
 
 def detach_device(args: argparse.Namespace):
+    if not args.serial and not args.artifact_path:
+        raise RuntimeError(f"Missing argument from this list: [--serial or --artifact-path]")
+
     # Release USB device from the RVM
     artifact_file = None
     if args.artifact_path:
