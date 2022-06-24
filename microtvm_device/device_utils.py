@@ -259,6 +259,10 @@ def ParseVirtualBoxDevices(micro_device: MicroDevice, username: str=None) -> lis
         output = subprocess.check_output(
             ["sudo", "-H", "-u", user, VBOXMANAGE_CMD, "list", "usbhost"], encoding="utf-8"
         )
+        if "Host USB Devices:\n\n<none>\n\n" in output:
+            logging.warning(f"User `{user}` cannot access USB information.")
+            continue
+
         current_dev = {}
         for line in output.split("\n"):
             if not line.strip():
