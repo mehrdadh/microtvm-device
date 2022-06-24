@@ -25,6 +25,7 @@ from tabulate import tabulate
 import logging
 import copy
 import random
+import grp
 
 VIRTUALBOX_VID_PID_RE = re.compile(r"0x([0-9A-Fa-f]{4}).*")
 
@@ -37,6 +38,8 @@ MICRO_DEVICE_TYPES = [
     "due",
     "spresense"
 ]
+
+VBOXMANAGE_CMD = subprocess.check_output(["which", "vboxmanage"], encoding="utf-8").replace("\n", "")
 
 logging.basicConfig(level=logging.INFO)
 LOG_ = logging.getLogger("Device Utils")
@@ -213,6 +216,13 @@ class MicroTVMPlatforms:
                 return copy.copy(platform)
         return None
 
+def _check_call(cmd, **kwargs) -> None:
+    try:
+        subprocess.run(cmd, capture_output=True, check=True, text=True, **kwargs)
+    except Exception as err:
+        error_msg = f"{err}\nstdout:\n{err.stdout}\nstderr:\n{err.stderr}"
+        raise Exception(error_msg)
+
 def LoadDeviceTable(table_file: str) -> MicroTVMPlatforms:
     """Load device table Json file to MicroTVMPlatforms."""
     with open(table_file, "r") as json_f:
@@ -225,69 +235,79 @@ def LoadDeviceTable(table_file: str) -> MicroTVMPlatforms:
                 device_table.AddPlatform(new_device)
     return device_table
 
+def GetUsersFromGroup(group_name: str) -> list:
+    """Return all users in a group on linux"""
+    all_users = []
+    groups = grp.getgrall()
+    for group in groups:
+        if group.gr_name == group_name:
+            for user in group[3]:
+                all_users.append(user)
+    return all_users
 
 def ParseVirtualBoxDevices(micro_device: MicroDevice) -> list:
     """Parse usb devices and return a list of devices maching microtvm_platform."""
-
-    output = subprocess.check_output(
-        ["VBoxManage", "list", "usbhost"], encoding="utf-8"
-    )
+    vboxusers = GetUsersFromGroup("vboxusers")
     devices = []
-    current_dev = {}
-    for line in output.split("\n"):
-        if not line.strip():
-            if current_dev:
-                if "VendorId" in current_dev and "ProductId" in current_dev:
-                    # Update VendorId and ProductId to hex
-                    m = VIRTUALBOX_VID_PID_RE.match(current_dev["VendorId"])
-                    if not m:
-                        LOG_.warning("Malformed VendorId: %s", current_dev["VendorId"])
-                        current_dev = {}
-                        continue
+    for user in vboxusers:
+        output = subprocess.check_output(
+            ["sudo", "-H", "-u", user, VBOXMANAGE_CMD, "list", "usbhost"], encoding="utf-8"
+        )
+        current_dev = {}
+        for line in output.split("\n"):
+            if not line.strip():
+                if current_dev:
+                    if "VendorId" in current_dev and "ProductId" in current_dev:
+                        # Update VendorId and ProductId to hex
+                        m = VIRTUALBOX_VID_PID_RE.match(current_dev["VendorId"])
+                        if not m:
+                            LOG_.warning("Malformed VendorId: %s", current_dev["VendorId"])
+                            current_dev = {}
+                            continue
 
-                    m = VIRTUALBOX_VID_PID_RE.match(current_dev["ProductId"])
-                    if not m:
-                        LOG_.warning(
-                            "Malformed ProductId: %s", current_dev["ProductId"]
+                        m = VIRTUALBOX_VID_PID_RE.match(current_dev["ProductId"])
+                        if not m:
+                            LOG_.warning(
+                                "Malformed ProductId: %s", current_dev["ProductId"]
+                            )
+                            current_dev = {}
+                            continue
+
+                        current_dev["vid_hex"] = (
+                            current_dev["VendorId"]
+                            .replace("(", "")
+                            .replace(")", "")
+                            .split(" ")[1]
+                            .lower()
                         )
-                        current_dev = {}
-                        continue
+                        current_dev.pop("VendorId", None)
 
-                    current_dev["vid_hex"] = (
-                        current_dev["VendorId"]
-                        .replace("(", "")
-                        .replace(")", "")
-                        .split(" ")[1]
-                        .lower()
-                    )
-                    current_dev.pop("VendorId", None)
+                        current_dev["pid_hex"] = (
+                            current_dev["ProductId"]
+                            .replace("(", "")
+                            .replace(")", "")
+                            .split(" ")[1]
+                            .lower()
+                        )
+                        current_dev.pop("ProductId", None)
 
-                    current_dev["pid_hex"] = (
-                        current_dev["ProductId"]
-                        .replace("(", "")
-                        .replace(")", "")
-                        .split(" ")[1]
-                        .lower()
-                    )
-                    current_dev.pop("ProductId", None)
+                        if (
+                            current_dev["vid_hex"]
+                            == micro_device.GetVID()
+                            and current_dev["pid_hex"]
+                            == micro_device.GetPID()
+                        ):
+                            devices.append(current_dev)
+                    current_dev = {}
 
-                    if (
-                        current_dev["vid_hex"]
-                        == micro_device.GetVID()
-                        and current_dev["pid_hex"]
-                        == micro_device.GetPID()
-                    ):
-                        devices.append(current_dev)
-                current_dev = {}
+                continue
 
-            continue
+            key, value = line.split(":", 1)
+            value = value.lstrip(" ")
+            current_dev[key] = value
 
-        key, value = line.split(":", 1)
-        value = value.lstrip(" ")
-        current_dev[key] = value
-
-    if current_dev:
-        devices.append(current_dev)
+        if current_dev:
+            devices.append(current_dev)
     return devices
 
 
@@ -408,8 +428,7 @@ def attach(micro_device: MicroDevice, vm_path: str):
         # if virtualbox_is_live(machine_uuid):
         #     raise RuntimeError("VM is running.")
 
-        # subprocess.check_call(rule_args)
-        subprocess.check_call(
+        _check_call(
             ["VBoxManage", "controlvm", machine_uuid, "usbattach", dev_uuid]
         )
         LOG_.info(f"USB with S/N {serial} attached.")
@@ -438,7 +457,7 @@ def detach(micro_device: MicroDevice, vm_path: str):
         LOG_.warning(f"Serial {micro_device.GetSerialNumber()} not found in usb devies.")
         LOG_.warning(usb_devices)
         return
-    subprocess.check_call(
+    _check_call(
         ["VBoxManage", "controlvm", machine_uuid, "usbdetach", dev_uuid]
     )
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "microtvm_device"
-version = "0.2.0"
+version = "0.3.0"
 description = ""
 authors = ["mehrdadh <mehrdad.hessar@gmail.com>"]
 keywords = ["microTVM", "tvm", "device"]
@@ -12,7 +12,7 @@ packages = [
 ]
 
 [tool.poetry.dependencies]
-python = "^3.6.9"
+python = ">=3.7"
 grpcio = "^1.39.0"
 grpcio-tools = "^1.39.0"
 tabulate = "^0.8.9"

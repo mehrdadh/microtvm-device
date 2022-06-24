@@ -161,6 +161,7 @@ def attach_device(args: argparse.Namespace):
 
 def detach_device(args: argparse.Namespace):
     # Release USB device from the RVM
+    artifact_file = None
     if args.artifact_path:
         artifact_file = args.artifact_path / get_artifact_filename(args.device)
         with open(artifact_file, "r") as f:
@@ -176,6 +177,9 @@ def detach_device(args: argparse.Namespace):
     device_utils.detach(grpc_micro_device._device, args.vm_path)
     # Release device from the microTVM device server
     server_release_device(args.port, args.device, serial_number)
+
+    if artifact_file:
+        artifact_file.unlink()
 
 
 def request_device(args: argparse.Namespace):
