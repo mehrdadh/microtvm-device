@@ -12,6 +12,8 @@ pip3 install microtvm_device
 To run the device server run command bellow with a JSON file including information about various devices. [Here](./config/device_table.template.json) is a template of JSON file.
 ```
 python -m microtvm_device.device_server --table-file=[DEVICE TABLE JSON FILE] <--port=[SERVER PORT]>
+
+Note: If you are using the server in an envrionment with multiple users using VirtualBox, server should be run on an account with `sudo` access to all account to be able to inquery the USB attachments with any VirtualBox instance.
 ```
 
 ## Use Device Client
