@@ -29,17 +29,6 @@ import grp
 import getpass
 
 VIRTUALBOX_VID_PID_RE = re.compile(r"0x([0-9A-Fa-f]{4}).*")
-
-MICRO_DEVICE_TYPES = [
-    "nucleo_f746zg",
-    "stm32f746g_disco",
-    "nrf5340dk_nrf5340_cpuapp",
-    "nucleo_l4r5zi",
-    "nano33ble",
-    "due",
-    "spresense"
-]
-
 VBOXMANAGE_CMD = subprocess.check_output(["which", "vboxmanage"], encoding="utf-8").replace("\n", "")
 
 logging.basicConfig(level=logging.INFO)
@@ -509,7 +498,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--microtvm-platform",
         required=True,
-        choices=MICRO_DEVICE_TYPES,
         help=("microTVM target platform for list."),
     )
 
