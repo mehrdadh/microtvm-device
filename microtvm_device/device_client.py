@@ -224,8 +224,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
     device_arg = ["--device", 
-        {"type": str, "required": True, "choices": device_utils.MICRO_DEVICE_TYPES, 
-            "help": "MicroTVM device to request."}]
+        {"type": str, "required": True, "help": "MicroTVM device to request."}]
     serial_arg = ["--serial", {"type": str, "default": None, "help": "Device serial number."}]
     vm_path_arg = ["--vm-path", {"type": pathlib.Path, "required": True, "help": "Path to Reference virtualbox."}]
     artifact_path_arg = ["--artifact-path", {"type": pathlib.Path, "default": None, "help": "Path to store device artifact."}]
