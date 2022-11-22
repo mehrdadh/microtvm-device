@@ -34,6 +34,7 @@ LOG_ = logging.getLogger("MicroTVM Device Client")
 def get_artifact_filename(device: str) -> str:
     return f"serial_{device}.micro"
 
+
 class GRPCMicroDevice:
     _device: MicroDevice = None
     _rpc_stub = None
@@ -66,13 +67,14 @@ class GRPCMicroDevice:
                 self._device.SetVID(response.vid)
                 self._device.SetPID(response.pid)
 
-    def ReleaseDevice(self):
+    def ReleaseDevice(self) -> bool:
         serial_number = self._device.GetSerialNumber()
         assert serial_number, "Serial number not valid."
         device_type = self._device.GetType()
-        self._rpc_stub.RPCDeviceRelease(
+        response = self._rpc_stub.RPCDeviceRelease(
             microDevice_pb2.DeviceMessage(type=device_type, serial_number=serial_number)
         )
+        return response.success
 
     def IsAlive(self) -> bool:
         response = self._rpc_stub.RPCDeviceIsAlive(
@@ -93,9 +95,7 @@ class GRPCMicroDevice:
         self._rpc_channel.close()
 
     def RequestList(self):
-        request = self._rpc_stub.RPCDeviceRequestList(
-            microDevice_pb2.StringMessage()
-        )
+        request = self._rpc_stub.RPCDeviceRequestList(microDevice_pb2.StringMessage())
         return request.text
 
     def EnableDevice(self, serial_number: str, status: bool):
@@ -126,8 +126,10 @@ def server_request_device(args: argparse.Namespace) -> MicroDevice:
 def server_release_device(port: int, device: str, serial_number: str):
     grpc_device = GRPCMicroDevice(port, device)
     grpc_device._device.SetSerialNumber(serial_number)
-    grpc_device.ReleaseDevice()
-    print(f"Device {serial_number} released.")
+    if grpc_device.ReleaseDevice():
+        print(f"Device {serial_number} released.")
+    else:
+        print(f"Relaes device {serial_number} failed.")
 
 
 def attach_device(args: argparse.Namespace):
@@ -194,10 +196,18 @@ def request_device(args: argparse.Namespace):
                 micro_device = server_request_device(args)
                 time.sleep(5)
     response_serial_number = micro_device.GetSerialNumber()
+
+    if args.artifact_path:
+        artifact_file = args.artifact_path
+        if artifact_file.is_file():
+            artifact_file.unlink()
+        with open(artifact_file, "w") as f:
+            f.write(str(response_serial_number))
+
     if response_serial_number:
-        LOG_.info(f"Request response was device with S/N {response_serial_number}!")
+        print(response_serial_number)
     else:
-        LOG_.info(f"No device available.")
+        print(f"No device available.")
     return micro_device.GetSerialNumber()
 
 
@@ -220,20 +230,29 @@ def query_device(args: argparse.Namespace):
 def run_command(args):
     args.func(args)
 
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser()
 
-    device_arg = ["--device", 
-        {"type": str, "required": True, "help": "MicroTVM device to request."}]
+    device_arg = [
+        "--device",
+        {"type": str, "required": True, "help": "MicroTVM device to request."},
+    ]
     serial_arg = ["--serial", {"type": str, "default": None, "help": "Device serial number."}]
-    vm_path_arg = ["--vm-path", {"type": pathlib.Path, "required": True, "help": "Path to Reference virtualbox."}]
-    artifact_path_arg = ["--artifact-path", {"type": pathlib.Path, "default": None, "help": "Path to store device artifact."}]
+    vm_path_arg = [
+        "--vm-path",
+        {"type": pathlib.Path, "required": True, "help": "Path to Reference virtualbox."},
+    ]
+    artifact_path_arg = [
+        "--artifact-path",
+        {"type": pathlib.Path, "default": None, "help": "Path to store device artifact."},
+    ]
 
     subparsers = parser.add_subparsers(help="Action to perform.")
     parser.add_argument(
         "--port",
         type=int,
-        default=50051,
+        default=6566,
         help="RPC server port",
     )
     parser.add_argument("--log-level", default=None, help="Log level.")
@@ -244,9 +263,7 @@ def parse_args() -> argparse.Namespace:
     parser_attach.set_defaults(func=attach_device)
     parser_attach.add_argument(device_arg[0], **device_arg[1])
     parser_attach.add_argument(vm_path_arg[0], **vm_path_arg[1])
-    parser_attach.add_argument(
-        "--wait", action="store_true", help="Wait if device not available."
-    )
+    parser_attach.add_argument("--wait", action="store_true", help="Wait if device not available.")
     parser_attach.add_argument(artifact_path_arg[0], **artifact_path_arg[1])
 
     parser_detach = subparsers.add_parser(
@@ -259,25 +276,18 @@ def parse_args() -> argparse.Namespace:
     parser_detach.add_argument(artifact_path_arg[0], **artifact_path_arg[1])
     parser_detach.add_argument(serial_arg[0], **serial_arg[1])
 
-    parser_request = subparsers.add_parser(
-        "request", help="Request a device from device server."
-    )
+    parser_request = subparsers.add_parser("request", help="Request a device from device server.")
     parser_request.set_defaults(func=request_device)
     parser_request.add_argument(device_arg[0], **device_arg[1])
-    parser_request.add_argument(
-        "--wait", action="store_true", help="Wait if device not available."
-    )
+    parser_request.add_argument(artifact_path_arg[0], **artifact_path_arg[1])
+    parser_request.add_argument("--wait", action="store_true", help="Wait if device not available.")
 
-    parser_release = subparsers.add_parser(
-        "release", help="Release a device from device server."
-    )
+    parser_release = subparsers.add_parser("release", help="Release a device from device server.")
     parser_release.set_defaults(func=release_device)
     parser_release.add_argument(device_arg[0], **device_arg[1])
     parser_release.add_argument(serial_arg[0], **serial_arg[1])
 
-    parser_query = subparsers.add_parser(
-        "query", help="Query devices from server."
-    )
+    parser_query = subparsers.add_parser("query", help="Query devices from server.")
     parser_query.set_defaults(func=query_device)
     parser_query.add_argument(
         "--enable", action="store_true", default=None, help="Enable a device on server."
@@ -297,6 +307,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO)
     run_command(args)
+
 
 if __name__ == "__main__":
     main()

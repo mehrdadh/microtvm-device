@@ -28,17 +28,16 @@ from microtvm_device import device_client
 
 SERVER_PORT = 4040
 
+
 def init_server():
     input_args = argparse.Namespace()
     input_args.table_file = (
-    pathlib.Path(__file__).parent
-        / ".."
-        / "config"
-        / "device_table.template.jsonsdsd"
+        pathlib.Path(__file__).parent / ".." / "config" / "device_table.template.jsonsdsd"
     ).resolve()
     input_args.port = SERVER_PORT
 
     device_server.ServerStart(input_args)
+
 
 def run_server():
     proc = multiprocessing.Process(target=init_server, args=())
@@ -47,10 +46,12 @@ def run_server():
     sleep(4)
     return proc
 
+
 def test_server():
     server_proc = run_server()
     sleep(4)
     server_proc.terminate()
+
 
 def test_query():
     server_proc = run_server()

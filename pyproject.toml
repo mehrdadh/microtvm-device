@@ -17,6 +17,7 @@ grpcio = "^1.39.0"
 grpcio-tools = "^1.39.0"
 tabulate = "^0.8.9"
 pytest = "^6.2.4"
+pyusb = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 
