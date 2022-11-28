@@ -51,6 +51,7 @@ message DeviceReply {
   bool is_alive = 2;
   string vid = 3;
   string pid = 4;
+  bool success = 5;
 }
 
 message SessionMessage {
