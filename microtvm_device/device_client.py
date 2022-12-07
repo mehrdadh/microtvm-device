@@ -317,8 +317,8 @@ def main():
         logging.basicConfig(level=args.log_level)
     else:
         logging.basicConfig(level=logging.INFO)
-    
-    if not hasattr(args, 'func'):
+
+    if not hasattr(args, "func"):
         LOG_.error(f"Please pass an action from {actions}")
         exit()
     run_command(args)
