@@ -26,6 +26,7 @@ from . import microDevice_pb2_grpc
 from . import device_utils
 from .device_utils import MicroDevice, MicroTVMPlatforms
 from .device_utils import GRPCSessionTasks
+from .utils import SERVER_DEFAULT_IP
 
 PLATFORMS = None
 SESSION_NUM_MAX_LEN = 10
@@ -158,7 +159,7 @@ def ServerStart(args):
     PLATFORMS = Initialize(args)
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     microDevice_pb2_grpc.add_RPCRequestServicer_to_server(RPCRequest(), server)
-    server.add_insecure_port(f"[::]:{args.port}")
+    server.add_insecure_port(f"{args.ip}:{args.port}")
     server.start()
     LOG_.info("Server started...!")
     LOG_.info(PLATFORMS)
@@ -172,6 +173,12 @@ def parse_args() -> argparse.Namespace:
         type=str,
         required=True,
         help="Json file include serial number of all instances.",
+    )
+    parser.add_argument(
+        "--ip",
+        type=str,
+        default=SERVER_DEFAULT_IP,
+        help="RPC server ip",
     )
     parser.add_argument("--port", type=int, default=6566, help="RPC port number.")
     parser.add_argument("--log-level", default=None, help="Log level.")
