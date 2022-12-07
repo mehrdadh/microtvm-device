@@ -27,6 +27,7 @@ from . import microDevice_pb2
 from .device_utils import MicroDevice
 from .device_utils import GRPCSessionTasks
 from . import device_utils
+from .utils import SERVER_DEFAULT_IP
 
 LOG_ = logging.getLogger("MicroTVM Device Client")
 
@@ -41,8 +42,8 @@ class GRPCMicroDevice:
     _rpc_channel = None
     _session_number: str = None
 
-    def __init__(self, rpc_port: int, device_type: str):
-        self._rpc_channel = grpc.insecure_channel(f"localhost:{rpc_port}")
+    def __init__(self, ip: str, port: int, device_type: str):
+        self._rpc_channel = grpc.insecure_channel(f"{ip}:{port}")
         self._rpc_stub = microDevice_pb2_grpc.RPCRequestStub(self._rpc_channel)
         self._device = MicroDevice(type=device_type, serial_number="")
 
@@ -118,13 +119,13 @@ class GRPCMicroDevice:
 
 
 def server_request_device(args: argparse.Namespace) -> MicroDevice:
-    grpc_device = GRPCMicroDevice(args.port, args.device)
+    grpc_device = GRPCMicroDevice(args.ip, args.port, args.device)
     grpc_device.RequestDevice()
     return grpc_device._device
 
 
-def server_release_device(port: int, device: str, serial_number: str):
-    grpc_device = GRPCMicroDevice(port, device)
+def server_release_device(ip: str, port: int, device: str, serial_number: str):
+    grpc_device = GRPCMicroDevice(ip, port, device)
     grpc_device._device.SetSerialNumber(serial_number)
     if grpc_device.ReleaseDevice():
         print(f"Device {serial_number} released.")
@@ -148,7 +149,7 @@ def attach_device(args: argparse.Namespace):
     try:
         device_utils.attach(micro_device, args.vm_path)
     except Exception as ex:
-        server_release_device(args.port, args.device, micro_device.GetSerialNumber())
+        server_release_device(args.ip, args.port, args.device, micro_device.GetSerialNumber())
         raise RuntimeError(ex)
 
     if args.artifact_path:
@@ -175,13 +176,13 @@ def detach_device(args: argparse.Namespace):
         serial_number = args.serial
 
     # make a MicroDevice with serial number, pid and vid
-    grpc_micro_device = GRPCMicroDevice(args.port, args.device)
+    grpc_micro_device = GRPCMicroDevice(args.ip, args.port, args.device)
     grpc_micro_device.SetDeviceInfo()
     grpc_micro_device._device.SetSerialNumber(serial_number)
 
     device_utils.detach(grpc_micro_device._device, args.vm_path)
     # Release device from the microTVM device server
-    server_release_device(args.port, args.device, serial_number)
+    server_release_device(args.ip, args.port, args.device, serial_number)
 
     if artifact_file:
         artifact_file.unlink()
@@ -216,7 +217,7 @@ def release_device(args: argparse.Namespace):
 
 
 def query_device(args: argparse.Namespace):
-    grpc_device = GRPCMicroDevice(args.port, None)
+    grpc_device = GRPCMicroDevice(args.ip, args.port, None)
     if hasattr(args, "enable") and args.enable:
         grpc_device.EnableDevice(serial_number=args.serial, status=True)
     elif hasattr(args, "disable") and args.disable:
@@ -249,6 +250,12 @@ def parse_args() -> argparse.Namespace:
     ]
 
     subparsers = parser.add_subparsers(help="Action to perform.")
+    parser.add_argument(
+        "--ip",
+        type=str,
+        default=SERVER_DEFAULT_IP,
+        help="RPC server ip",
+    )
     parser.add_argument(
         "--port",
         type=int,
@@ -297,15 +304,23 @@ def parse_args() -> argparse.Namespace:
     )
     parser_query.add_argument(serial_arg[0], **serial_arg[1])
 
-    return parser.parse_args()
+    actions = []
+    for name, item in subparsers.choices.items():
+        actions.append(name)
+
+    return parser.parse_args(), actions
 
 
 def main():
-    args = parse_args()
+    args, actions = parse_args()
     if args.log_level:
         logging.basicConfig(level=args.log_level)
     else:
         logging.basicConfig(level=logging.INFO)
+
+    if not hasattr(args, "func"):
+        LOG_.error(f"Please pass an action from {actions}")
+        exit()
     run_command(args)
 
 
