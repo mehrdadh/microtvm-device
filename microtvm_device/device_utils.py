@@ -43,7 +43,7 @@ class MicroDevice(object):
     """A microTVM device instance."""
 
     def __init__(
-        self, type: str, serial_number: str, vid_hex: str = None, pid_hex: str = None
+        self, device_type: str, serial_number: str, vid_hex: str = None, pid_hex: str = None
     ) -> None:
         """
         Parameters
@@ -63,13 +63,13 @@ class MicroDevice(object):
         _enabled : bool
             True if device is enabled to use.
         """
-        self._type = type
-        self._serial_number = serial_number
-        self._vid_hex = vid_hex
-        self._pid_hex = pid_hex
-        self._is_taken = False
-        self._user = None
-        self._enabled = True
+        self._type: str = device_type
+        self._serial_number: str = serial_number
+        self._vid_hex: str = vid_hex
+        self._pid_hex: str = pid_hex
+        self._is_taken: bool = False
+        self._user: str = None
+        self._enabled: bool = True
         super().__init__()
 
     def __str__(self) -> str:
@@ -238,13 +238,14 @@ def LoadDeviceTable(table_file: str) -> MicroTVMPlatforms:
         device_table = MicroTVMPlatforms()
         for device_type, config in data.items():
             for item in config["instances"]:
-                new_device = MicroDevice(
-                    type=device_type,
-                    serial_number=item,
-                    vid_hex=config["vid_hex"],
-                    pid_hex=config["pid_hex"],
-                )
-                device_table.AddPlatform(new_device)
+                for (vid, pid) in config["vid_pid_hex"]:
+                    new_device = MicroDevice(
+                        device_type=device_type,
+                        serial_number=item,
+                        vid_hex=vid,
+                        pid_hex=pid,
+                    )
+                    device_table.AddPlatform(new_device)
     return device_table
 
 
@@ -363,7 +364,7 @@ def ListConnectedDevices(micro_device: MicroDevice) -> list:
     device_list = []
     for device in devices:
         new_device = MicroDevice(
-            type=micro_device.GetType(),
+            device_type=micro_device.GetType(),
             serial_number=device["SerialNumber"],
             vid_hex=micro_device.GetVID(),
             pid_hex=micro_device.GetPID(),
@@ -441,7 +442,7 @@ def virtualbox_is_live(machine_uuid: str):
 
 
 def attach_command(args):
-    attach(MicroDevice(type=args.microtvm_platform, serial_number=args.serial), args.vm_path)
+    attach(MicroDevice(device_type=args.microtvm_platform, serial_number=args.serial), args.vm_path)
 
 
 def attach(micro_device: MicroDevice, vm_path: str):
