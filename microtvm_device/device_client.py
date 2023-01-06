@@ -45,7 +45,7 @@ class GRPCMicroDevice:
     def __init__(self, ip: str, port: int, device_type: str):
         self._rpc_channel = grpc.insecure_channel(f"{ip}:{port}")
         self._rpc_stub = microDevice_pb2_grpc.RPCRequestStub(self._rpc_channel)
-        self._device = MicroDevice(type=device_type, serial_number="")
+        self._device = MicroDevice(device_type=device_type, serial_number="")
 
         # Request session number
         response = self._rpc_stub.RPCSessionRequest(
