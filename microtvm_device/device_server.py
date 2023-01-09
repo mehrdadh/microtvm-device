@@ -41,7 +41,7 @@ def LoadAttachedDevices(args: argparse.Namespace) -> MicroTVMPlatforms:
 
     return: attached_devices
     """
-    table = device_utils.LoadDeviceTable(args.table_file)
+    table: MicroTVMPlatforms = device_utils.LoadDeviceTable(args.table_file)
 
     # Return a fake list of devices for testing
     if args.dry_run:
