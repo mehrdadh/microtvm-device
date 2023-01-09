@@ -1,53 +1,27 @@
 {
     "nucleo_f746zg": {
-        "vid_pid_hex": [["0483","374b"]],
         "manufacturer": "STMicroelectronics",
         "instances": [
-            "nucleo_f746zg_1",
-            "nucleo_f746zg_2",
-            "nucleo_f746zg_3"
+            ["nucleo_f746zg_1",,"0483","374b"]
         ]
         },
     "stm32f746g_disco": {
-        "vid_pid_hex": [["0483", "374b"]],
         "manufacturer": "STMicroelectronics",
         "instances": [
-            "stm32f746g_disco_1",
-            "stm32f746g_disco_2",
-            "stm32f746g_disco_3"
+            ["stm32f746g_disco_1","0483","374b"]
         ]
     },
     "nrf5340dk_nrf5340_cpuapp": {
-        "vid_pid_hex": [["1366", "1051"], ["1366", "1055"]],
         "manufacturer": "SEGGER",
         "instances": [
-            "nrf5340dk_nrf5340_cpuapp_1",
-            "nrf5340dk_nrf5340_cpuapp_2",
-            "nrf5340dk_nrf5340_cpuapp_3",
-            "nrf5340dk_nrf5340_cpuapp_4",
-            "nrf5340dk_nrf5340_cpuapp_5",
-            "nrf5340dk_nrf5340_cpuapp_6",
-            "nrf5340dk_nrf5340_cpuapp_7",
-            "nrf5340dk_nrf5340_cpuapp_8",
-            "nrf5340dk_nrf5340_cpuapp_9",
-            "nrf5340dk_nrf5340_cpuapp_10",
-            "nrf5340dk_nrf5340_cpuapp_11",
-            "nrf5340dk_nrf5340_cpuapp_12",
-            "nrf5340dk_nrf5340_cpuapp_13",
-            "nrf5340dk_nrf5340_cpuapp_14",
-            "nrf5340dk_nrf5340_cpuapp_15",
-            "nrf5340dk_nrf5340_cpuapp_16",
-            "nrf5340dk_nrf5340_cpuapp_17",
-            "nrf5340dk_nrf5340_cpuapp_18"
+            ["nrf5340dk_nrf5340_cpuapp_1","1366","1051"],
+            ["nrf5340dk_nrf5340_cpuapp_2","1366","1055"]
         ]
     },
     "nucleo_l4r5zi": {
-        "vid_pid_hex": [["0483", "374b"]],
         "manufacturer": "STMicroelectronics",
         "instances": [
-            "nucleo_l4r5zi_1",
-            "nucleo_l4r5zi_2",
-            "nucleo_l4r5zi_3"
+            ["nucleo_l4r5zi_1","0483","374b"]
         ]
     }
 }

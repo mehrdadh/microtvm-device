@@ -211,8 +211,9 @@ class MicroTVMPlatforms:
         micro_device_list = list()
         all_types = set()
         for platform in self._platforms:
-            if platform.GetType() not in all_types:
-                all_types.add(platform.GetType())
+            platform_code = f"{platform.GetType()},{platform.GetPID()},{platform.GetVID()}"
+            if platform_code not in all_types:
+                all_types.add(platform_code)
                 micro_device_list.append(platform)
         return micro_device_list
 
@@ -237,15 +238,14 @@ def LoadDeviceTable(table_file: str) -> MicroTVMPlatforms:
         data = json.load(json_f)
         device_table = MicroTVMPlatforms()
         for device_type, config in data.items():
-            for item in config["instances"]:
-                for (vid, pid) in config["vid_pid_hex"]:
-                    new_device = MicroDevice(
-                        device_type=device_type,
-                        serial_number=item,
-                        vid_hex=vid,
-                        pid_hex=pid,
-                    )
-                    device_table.AddPlatform(new_device)
+            for (serial, vid, pid) in config["instances"]:
+                new_device = MicroDevice(
+                    device_type=device_type,
+                    serial_number=serial,
+                    vid_hex=vid,
+                    pid_hex=pid,
+                )
+                device_table.AddPlatform(new_device)
     return device_table
 
 
