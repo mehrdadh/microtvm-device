@@ -31,9 +31,6 @@ import usb.core
 import usb.util
 
 VIRTUALBOX_VID_PID_RE = re.compile(r"0x([0-9A-Fa-f]{4}).*")
-VBOXMANAGE_CMD = subprocess.check_output(["which", "vboxmanage"], encoding="utf-8").replace(
-    "\n", ""
-)
 
 logging.basicConfig(level=logging.INFO)
 LOG_ = logging.getLogger("Device Utils")
@@ -289,6 +286,7 @@ def ParseVirtualBoxDevices(micro_device: MicroDevice, username: str = None) -> l
     """Parse usb devices and return a list of devices maching microtvm_platform.
     This function returns one device per serial number and user.
     """
+    vboxmanage_cmd = subprocess.check_output(["which", "vboxmanage"], encoding="utf-8").replace("\n", "")
     if username:
         vboxusers = [username]
     else:
@@ -296,7 +294,7 @@ def ParseVirtualBoxDevices(micro_device: MicroDevice, username: str = None) -> l
     devices = []
     for user in vboxusers:
         output = subprocess.check_output(
-            ["sudo", "-H", "-u", user, VBOXMANAGE_CMD, "list", "usbhost"], encoding="utf-8"
+            ["sudo", "-H", "-u", user, vboxmanage_cmd, "list", "usbhost"], encoding="utf-8"
         )
         if "Host USB Devices:\n\n<none>\n\n" in output:
             logging.warning(f"User `{user}` cannot access USB information.")
